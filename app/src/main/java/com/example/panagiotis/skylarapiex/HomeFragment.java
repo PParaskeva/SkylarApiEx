@@ -14,11 +14,16 @@ import com.example.panagiotis.skylarapiex.api.ApiCall;
 import com.example.panagiotis.skylarapiex.api.Connection;
 import com.example.panagiotis.skylarapiex.model.SkylarkPojo;
 import com.example.panagiotis.skylarapiex.model.pojo.EpidoseDetails;
+import com.example.panagiotis.skylarapiex.model.realm.CaschData;
+import com.example.panagiotis.skylarapiex.model.realm.Favorites;
 
 import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
+import io.realm.Realm;
+import io.realm.RealmResults;
 import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -34,6 +39,7 @@ public class HomeFragment extends Fragment {
     HomeAdapter mHomeAdapter;
     ArrayList<String> mUrlEpisodeList;
     ArrayList<EpidoseDetails> mEpidoseDetailsArrayList;
+    private Realm realm;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,7 +53,9 @@ public class HomeFragment extends Fragment {
         ButterKnife.bind(this,v);
         mUrlEpisodeList=new ArrayList<>();
         mEpidoseDetailsArrayList=new ArrayList<>();
+        realm = Realm.getDefaultInstance();
         makeHomeApiCall();
+        initRecyclerView();
         return v;
     }
 
@@ -77,9 +85,16 @@ public class HomeFragment extends Fragment {
                     }
 
                     @Override
-                    public void onNext(EpidoseDetails epidoseDetails) {
-                        mEpidoseDetailsArrayList.add(epidoseDetails);
-                        initRecyclerView(mEpidoseDetailsArrayList);
+                    public void onNext(final EpidoseDetails epidoseDetails) {
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                CaschData caschData = realm.createObject(CaschData.class);
+                                caschData.setName(epidoseDetails.getTitle());
+                                caschData.setUuid(epidoseDetails.getUid());
+                            }
+                        });
+                        initRecyclerView();
                     }
                 });
     }
@@ -111,8 +126,9 @@ public class HomeFragment extends Fragment {
     }
 
 
-    private void initRecyclerView(ArrayList<EpidoseDetails> mEpidoseDetailsArrayList) {
-        mHomeAdapter = new HomeAdapter(mEpidoseDetailsArrayList);
+    private void initRecyclerView() {
+        final RealmResults<CaschData> results = realm.where(CaschData.class).findAll();
+        mHomeAdapter = new HomeAdapter(results,((MainActivity)getActivity()));
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.setAdapter(mHomeAdapter);

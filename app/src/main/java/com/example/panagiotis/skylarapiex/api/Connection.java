@@ -39,7 +39,6 @@ public class Connection {
         okHttpClient= new OkHttpClient.Builder().addInterceptor(interceptor).build();
 
         String baseurl=Constants.BASE_URL+Constants.EPISODE_URL;
-        System.out.println(baseurl);
         retrofit=new Retrofit.Builder()
                 .baseUrl(baseurl)
                 .addConverterFactory(GsonConverterFactory.create())
