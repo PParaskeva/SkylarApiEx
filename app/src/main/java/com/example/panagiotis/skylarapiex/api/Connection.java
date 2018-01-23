@@ -17,13 +17,31 @@ public class Connection {
     private static Retrofit retrofit;
     private static OkHttpClient okHttpClient;
 
-    public static ApiCall getLastFMConnection(){
+    public static ApiCall getHomeConnection(){
         HttpLoggingInterceptor interceptor= new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         okHttpClient= new OkHttpClient.Builder().addInterceptor(interceptor).build();
 
         retrofit=new Retrofit.Builder()
                 .baseUrl(Constants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .client(okHttpClient)
+                .build();
+
+        return retrofit.create(ApiCall.class);
+
+    }
+
+    public static ApiCall getEpisodeConnection(){
+        HttpLoggingInterceptor interceptor= new HttpLoggingInterceptor();
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        okHttpClient= new OkHttpClient.Builder().addInterceptor(interceptor).build();
+
+        String baseurl=Constants.BASE_URL+Constants.EPISODE_URL;
+        System.out.println(baseurl);
+        retrofit=new Retrofit.Builder()
+                .baseUrl(baseurl)
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                 .client(okHttpClient)
